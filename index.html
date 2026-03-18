@@ -1,152 +1,193 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Modern Chat App</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>cooking - チャットアプリ</title>
 <style>
   :root {
-    --bg-sidebar: #202225;
-    --bg-channels: #2f3136;
-    --bg-chat: #36393f;
-    --bg-user-area: #292b2f;
-    --text-normal: #dcddde;
-    --text-muted: #72767d;
-    --brand: #5865F2;
-    --brand-hover: #4752c4;
-    --danger: #ed4245;
-    --online: #3ba55d;
+    --bg-channels: #38302c;
+    --bg-chat: #2e2723;
+    --bg-user-area: #28211e;
+    --text-normal: #ece1d9;
+    --text-muted: #a4978e;
+    --brand: #e67e22;
+    --brand-hover: #d35400;
+    --danger: #e74c3c;
+    --online: #2ecc71;
+    --admin-gold: #f1c40f;
+    --verified-blue: #3498db;
   }
   
-  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif; }
   body { background-color: var(--bg-chat); color: var(--text-normal); height: 100vh; display: flex; overflow: hidden; }
   
-  /* Layout */
   #app { display: flex; width: 100%; height: 100%; }
-  .sidebar { width: 72px; background: var(--bg-sidebar); display: flex; flex-direction: column; align-items: center; padding-top: 12px; }
-  .home-icon { width: 48px; height: 48px; background: var(--brand); border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; cursor: pointer; transition: 0.2s; }
   
-  .channels { width: 240px; background: var(--bg-channels); display: flex; flex-direction: column; }
-  .channels-header { height: 48px; padding: 0 16px; display: flex; align-items: center; font-weight: bold; border-bottom: 1px solid #202225; }
-  .friend-list { flex: 1; overflow-y: auto; padding: 8px; }
-  .friend-item { display: flex; align-items: center; padding: 8px; border-radius: 4px; cursor: pointer; margin-bottom: 2px; }
-  .friend-item:hover { background: rgba(79,84,92,0.32); }
-  .avatar { width: 32px; height: 32px; border-radius: 50%; background: #4f545c; margin-right: 12px; object-fit: cover; cursor: pointer; position: relative; }
-  .status-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--text-muted); position: absolute; bottom: 0; right: 0; border: 2px solid var(--bg-channels); }
+  /* 左パネル */
+  .channels { width: 280px; background: var(--bg-channels); display: flex; flex-direction: column; border-right: 1px solid #221c19; }
+  .site-header { height: 60px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; background: var(--bg-user-area); border-bottom: 1px solid #221c19; }
+  .site-brand { font-size: 18px; font-weight: bold; color: var(--brand); display: flex; align-items: center; gap: 6px; }
+  .my-profile-mini { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 4px 8px; border-radius: 4px; transition: 0.2s; }
+  .my-profile-mini:hover { background: rgba(255,255,255,0.1); }
+  .my-profile-mini img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+  
+  .section { display: flex; flex-direction: column; padding: 12px 0; }
+  .section-title { font-size: 12px; font-weight: bold; color: var(--text-muted); padding: 0 16px; margin-bottom: 8px; text-transform: uppercase; }
+  .pin-inputs { padding: 0 16px; display: flex; gap: 8px; margin-bottom: 8px; }
+  .pin-inputs input { flex: 1; padding: 8px; border-radius: 4px; border: 1px solid #4a403a; background: var(--bg-chat); color: white; outline: none; min-width: 0; }
+  
+  .friend-list { flex: 1; overflow-y: auto; padding: 0 8px; }
+  .friend-item { display: flex; align-items: center; padding: 10px; border-radius: 6px; cursor: pointer; margin-bottom: 4px; transition: 0.1s; }
+  .friend-item:hover { background: rgba(255,255,255,0.05); }
+  .avatar-container { position: relative; width: 36px; height: 36px; margin-right: 12px; }
+  .avatar-container img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+  .status-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--text-muted); position: absolute; bottom: -2px; right: -2px; border: 2px solid var(--bg-channels); }
   .status-dot.online { background: var(--online); }
   
-  .user-area { height: 52px; background: var(--bg-user-area); padding: 0 8px; display: flex; align-items: center; justify-content: space-between; }
-  .user-info { display: flex; align-items: center; }
-  .user-info span { font-size: 14px; font-weight: bold; display: block; }
-  .user-info small { font-size: 11px; color: var(--text-muted); }
-  .settings-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 18px; padding: 4px; border-radius: 4px; }
-  .settings-btn:hover { background: rgba(79,84,92,0.32); color: var(--text-normal); }
-  
+  /* チャットエリア */
   .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--bg-chat); }
-  .chat-header { height: 48px; border-bottom: 1px solid #202225; display: flex; align-items: center; padding: 0 16px; font-weight: bold; }
-  .messages { flex: 1; overflow-y: auto; padding: 16px; }
-  .message { margin-bottom: 16px; display: flex; }
-  .message .msg-content { margin-left: 16px; }
-  .message .msg-author { font-weight: bold; margin-bottom: 4px; }
-  .message .msg-text { color: var(--text-normal); }
-  .chat-input { padding: 0 16px 24px; }
-  .chat-input input { width: 100%; padding: 12px; border-radius: 8px; border: none; background: #40444b; color: white; outline: none; }
+  .chat-header { height: 60px; border-bottom: 1px solid #221c19; display: flex; align-items: center; padding: 0 16px; font-weight: bold; font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+  .mobile-back { display: none; background: transparent; border: none; color: var(--text-normal); font-size: 20px; margin-right: 16px; cursor: pointer; }
+  .header-user-info { display: flex; align-items: center; gap: 10px; cursor: pointer; }
   
-  /* Connect Panel */
-  .connect-panel { padding: 20px; display: flex; gap: 10px; border-bottom: 1px solid #202225; background: #2f3136; }
-  .connect-panel input { padding: 8px; border-radius: 4px; border: none; background: #202225; color: white; outline: none; width: 150px; }
-  button { padding: 8px 16px; background: var(--brand); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-  button:hover { background: var(--brand-hover); }
+  .messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+  .message { display: flex; gap: 16px; position: relative; group; }
+  .msg-content { flex: 1; }
+  .msg-author-line { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-weight: bold; }
+  .msg-text { color: var(--text-normal); line-height: 1.4; }
+  .msg-text.deleted-notify { color: var(--text-muted); font-style: italic; font-size: 0.9em; }
+  .msg-text.deleted-silent { color: var(--danger); opacity: 0.7; text-decoration: line-through; }
+  .btn-delete { position: absolute; right: 0; top: 0; background: var(--danger); color: white; border: none; border-radius: 4px; padding: 2px 8px; font-size: 11px; cursor: pointer; opacity: 0; transition: 0.2s; }
+  .message:hover .btn-delete { opacity: 1; }
   
-  /* Modals */
-  .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 100; }
-  .modal { background: var(--bg-chat); padding: 24px; border-radius: 8px; width: 400px; max-width: 90%; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
-  .modal h2 { margin-bottom: 16px; text-align: center; }
+  .chat-input-container { padding: 0 20px 24px; }
+  .chat-input-container input { width: 100%; padding: 14px 16px; border-radius: 8px; border: 1px solid #4a403a; background: #3c342f; color: white; outline: none; font-size: 15px; }
+  .chat-input-container input:focus { border-color: var(--brand); }
+  
+  /* 共通UI部品 */
+  button.action-btn { padding: 8px 16px; background: var(--brand); color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s; white-space: nowrap; }
+  button.action-btn:hover { background: var(--brand-hover); }
+  
+  .badge { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; font-size: 10px; color: white; margin-left: 4px; }
+  .badge-admin { background: var(--admin-gold); }
+  .badge-verified { background: var(--verified-blue); }
+  
+  /* モーダル */
+  .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(2px); }
+  .modal { background: var(--bg-chat); padding: 24px; border-radius: 8px; width: 400px; max-width: 90%; box-shadow: 0 8px 24px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; }
+  .modal h2 { margin-bottom: 20px; text-align: center; color: var(--text-normal); }
   .input-group { margin-bottom: 16px; }
-  .input-group label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: bold; color: var(--text-muted); text-transform: uppercase; }
-  .input-group input, .input-group textarea { width: 100%; padding: 10px; border-radius: 4px; border: none; background: #202225; color: white; outline: none; }
-  .input-group textarea { resize: vertical; min-height: 60px; }
+  .input-group label { display: block; margin-bottom: 8px; font-size: 12px; font-weight: bold; color: var(--text-muted); }
+  .input-group input, .input-group textarea { width: 100%; padding: 12px; border-radius: 4px; border: 1px solid #4a403a; background: #3c342f; color: white; outline: none; }
+  .input-group textarea { resize: vertical; min-height: 80px; }
   .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
-  .btn-cancel { background: transparent; color: white; }
-  .btn-cancel:hover { background: transparent; text-decoration: underline; }
+  .btn-cancel { background: transparent; color: var(--text-muted); border: none; padding: 8px 16px; cursor: pointer; }
+  .btn-cancel:hover { color: white; }
   
+  .settings-footer { margin-top: 30px; padding-top: 16px; border-top: 1px solid #4a403a; display: flex; flex-direction: column; gap: 10px; }
+  
+  /* 通知 */
   #notification-area { position: fixed; top: 20px; right: 20px; z-index: 200; display: flex; flex-direction: column; gap: 10px; }
-  .toast { background: var(--bg-channels); padding: 16px; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); border-left: 4px solid var(--brand); animation: slideIn 0.3s; }
+  .toast { background: var(--bg-channels); padding: 16px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border-left: 4px solid var(--brand); animation: slideIn 0.3s; color: white; }
   @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+  /* レスポンシブ (スマホ向け全画面表示) */
+  @media (max-width: 768px) {
+    #app.view-list .channels { width: 100%; border-right: none; }
+    #app.view-list .chat-area { display: none; }
+    #app.view-chat .channels { display: none; }
+    #app.view-chat .chat-area { width: 100%; }
+    .mobile-back { display: block; }
+  }
 </style>
 </head>
 <body>
 
-<div id="app" style="display:none;">
-  <nav class="sidebar">
-    <div class="home-icon">D</div>
-  </nav>
-  
+<div id="app" class="view-list" style="display:none;">
   <aside class="channels">
-    <div class="channels-header">Direct Messages</div>
-    <div class="friend-list" id="friend-list">
+    <div class="site-header">
+      <div class="site-brand">🍳 cooking</div>
+      <div class="my-profile-mini" onclick="openSettings()">
+        <img id="my-avatar" src="">
+        <div id="my-name-display" style="font-size: 14px; font-weight: bold;"></div>
       </div>
+    </div>
     
-    <div class="user-area">
-      <div class="user-info">
-        <img id="my-avatar" src="" class="avatar">
-        <div>
-          <span id="my-name">User</span>
-          <small id="my-status">#<span id="my-pin"></span></small>
-        </div>
+    <div class="section">
+      <div class="section-title">PINで接続 (あなたのPIN: <span id="my-pin" style="color:var(--brand)"></span>)</div>
+      <div class="pin-inputs">
+        <input type="text" id="target-pin" placeholder="相手の5桁のPIN" maxlength="5">
+        <button class="action-btn" onclick="requestPinConnection()">接続</button>
       </div>
-      <button class="settings-btn" onclick="openSettings()">⚙️</button>
+    </div>
+    
+    <div class="section" style="flex: 1; overflow: hidden; display: flex; flex-direction: column;">
+      <div class="section-title">フレンド</div>
+      <div class="friend-list" id="friend-list"></div>
     </div>
   </aside>
   
   <main class="chat-area">
-    <div class="connect-panel">
-      <input type="text" id="target-pin" placeholder="Enter 5-digit PIN" maxlength="5">
-      <button onclick="requestPinConnection()">Connect</button>
+    <div class="chat-header">
+      <button class="mobile-back" onclick="goBackToList()">‹</button>
+      <div id="chat-header-content"></div>
     </div>
-    <div class="chat-header" id="chat-header">Select a friend to chat</div>
     <div class="messages" id="messages"></div>
-    <div class="chat-input" id="chat-input-container" style="display:none;">
-      <input type="text" id="chat-input" placeholder="Message..." onkeypress="handleChatInput(event)">
+    <div class="chat-input-container" id="chat-input-container" style="display:none;">
+      <input type="text" id="chat-input" placeholder="メッセージを送信..." onkeypress="handleChatInput(event)">
     </div>
   </main>
 </div>
 
 <div id="setup-modal" class="modal-overlay">
   <div class="modal">
-    <h2>Welcome</h2>
+    <h2>ようこそ cooking へ</h2>
     <div class="input-group">
-      <label>Display Name</label>
-      <input type="text" id="setup-name" placeholder="How should we call you?">
+      <label>表示名</label>
+      <input type="text" id="setup-name" placeholder="あなたの名前を入力してください">
     </div>
     <div class="modal-actions">
-      <button onclick="finishSetup()">Get Started</button>
+      <button class="action-btn" onclick="finishSetup()">はじめる</button>
     </div>
   </div>
 </div>
 
 <div id="settings-modal" class="modal-overlay">
   <div class="modal">
-    <h2>User Settings</h2>
+    <h2>プロフィール設定</h2>
+    <div style="text-align: center; margin-bottom: 20px;">
+      <img id="settings-avatar-preview" src="" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-bottom: 10px;">
+    </div>
     <div class="input-group">
-      <label>Avatar (Upload Image)</label>
+      <label>アイコンを変更</label>
       <input type="file" id="settings-avatar" accept="image/*">
     </div>
     <div class="input-group">
-      <label>Display Name</label>
+      <label>表示名</label>
       <input type="text" id="settings-name">
     </div>
     <div class="input-group">
-      <label>About Me</label>
-      <textarea id="settings-bio" placeholder="Write a short bio..."></textarea>
+      <label>自己紹介</label>
+      <textarea id="settings-bio" placeholder="自己紹介を入力..."></textarea>
     </div>
     <div class="input-group">
-      <label>Your ID</label>
-      <input type="text" id="settings-id" readonly disabled style="color:var(--text-muted)">
+      <label>あなたのID</label>
+      <input type="text" id="settings-id" readonly disabled>
     </div>
+    
     <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeModal('settings-modal')">Cancel</button>
-      <button onclick="saveSettings()">Save Changes</button>
+      <button class="btn-cancel" onclick="closeModal('settings-modal')">キャンセル</button>
+      <button class="action-btn" onclick="saveSettings()">保存</button>
+    </div>
+    
+    <div class="settings-footer">
+      <div id="badge-toggle-container" style="display:none;">
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-normal);">
+          <input type="checkbox" id="badge-visible-checkbox" style="width:auto;"> バッジを表示する
+        </label>
+      </div>
+      <button class="btn-cancel" style="text-align: left; padding: 0;" onclick="makeAdmin()">このアカウントを管理者アカウントにする</button>
     </div>
   </div>
 </div>
@@ -154,15 +195,16 @@
 <div id="profile-modal" class="modal-overlay">
   <div class="modal" style="text-align: center;">
     <img id="profile-avatar" src="" style="width: 80px; height: 80px; border-radius: 50%; margin-bottom: 10px; object-fit: cover;">
-    <h2 id="profile-name">Name</h2>
+    <h2 id="profile-name" style="margin-bottom: 4px;">Name</h2>
     <p style="color: var(--text-muted); font-size: 12px; margin-bottom: 16px;">ID: <span id="profile-id"></span></p>
-    <div style="background: var(--bg-user-area); padding: 12px; border-radius: 8px; text-align: left; margin-bottom: 20px;">
-      <label style="font-size: 12px; font-weight: bold; color: var(--text-muted); text-transform: uppercase;">About Me</label>
-      <p id="profile-bio" style="font-size: 14px; margin-top: 4px;">No bio provided.</p>
+    <div style="background: var(--bg-channels); padding: 12px; border-radius: 8px; text-align: left; margin-bottom: 20px;">
+      <label style="font-size: 12px; font-weight: bold; color: var(--text-muted);">自己紹介</label>
+      <p id="profile-bio" style="font-size: 14px; margin-top: 4px; white-space: pre-wrap;"></p>
     </div>
-    <div class="modal-actions" style="justify-content: center;">
-      <button class="btn-cancel" onclick="closeModal('profile-modal')">Close</button>
-      <button id="add-friend-btn" onclick="sendFriendRequest()">Send Friend Request</button>
+    <div class="modal-actions" style="justify-content: center; flex-direction: column; gap: 10px;">
+      <button class="action-btn" id="add-friend-btn" onclick="sendFriendRequest()">フレンド申請を送る</button>
+      <div id="profile-admin-actions"></div>
+      <button class="btn-cancel" onclick="closeModal('profile-modal')">閉じる</button>
     </div>
   </div>
 </div>
@@ -171,25 +213,27 @@
 
 <script>
 // ==========================================
-// STATE & STORAGE
+// 状態管理
 // ==========================================
-let userProfile = { id: '', name: '', avatar: '', bio: '' };
+// role: 'user' | 'admin' | 'verified'
+let userProfile = { id: '', name: '', avatar: '', bio: '', role: 'user', badgeVisible: true };
 let sessionPin = '';
-let friends = []; // { id, name, avatar, bio }
-let chatHistory = {}; // { friendId: [{fromMe: bool, text: ''}] }
+let friends = [];
+let chatHistory = {}; // { friendId: [{ id, text, fromMe, deleted, silent }] }
 let activeChatId = null;
 let onlineFriends = new Set();
-let tempProfiles = {}; // Stores profiles discovered via PIN temporarily
+let tempProfiles = {};
 
-const bc = new BroadcastChannel('chat_network');
+const bc = new BroadcastChannel('cooking_chat_network');
 
 // ==========================================
-// INITIALIZATION
+// 初期化
 // ==========================================
 function init() {
-  const savedData = localStorage.getItem('chatAppUser');
+  const savedData = localStorage.getItem('cookingAppUser');
   if (savedData) {
-    userProfile = JSON.parse(savedData);
+    userProfile = { ...userProfile, ...JSON.parse(savedData) };
+    if(userProfile.badgeVisible === undefined) userProfile.badgeVisible = true;
     loadLocalData();
     startSession();
   } else {
@@ -205,14 +249,13 @@ function generateId(length) {
 
 function finishSetup() {
   const name = document.getElementById('setup-name').value.trim();
-  if (!name) return alert('Please enter a name');
+  if (!name) return alert('名前を入力してください');
   
-  userProfile = {
-    id: generateId(10),
-    name: name,
-    avatar: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=', // transparent 1x1 default
-    bio: ''
-  };
+  userProfile.id = generateId(10);
+  userProfile.name = name;
+  // デフォルトアイコン
+  userProfile.avatar = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="%234a403a"/><text x="50" y="50" font-family="Arial" font-size="40" fill="%23fff" text-anchor="middle" dy=".3em">' + name.charAt(0).toUpperCase() + '</text></svg>';
+  
   saveLocalUser();
   document.getElementById('setup-modal').style.display = 'none';
   startSession();
@@ -224,29 +267,44 @@ function startSession() {
   updateMyUI();
   renderFriends();
   
-  // Heartbeat for online status
   setInterval(() => {
     bc.postMessage({ type: 'PING', id: userProfile.id, pin: sessionPin, profile: userProfile });
   }, 2000);
 }
 
-function saveLocalUser() { localStorage.setItem('chatAppUser', JSON.stringify(userProfile)); }
+function saveLocalUser() { localStorage.setItem('cookingAppUser', JSON.stringify(userProfile)); }
 function loadLocalData() {
-  const f = localStorage.getItem('chatAppFriends');
+  const f = localStorage.getItem('cookingAppFriends');
   if(f) friends = JSON.parse(f);
-  const c = localStorage.getItem('chatAppHistory');
+  const c = localStorage.getItem('cookingAppHistory');
   if(c) chatHistory = JSON.parse(c);
 }
-function saveLocalFriends() { localStorage.setItem('chatAppFriends', JSON.stringify(friends)); }
-function saveLocalHistory() { localStorage.setItem('chatAppHistory', JSON.stringify(chatHistory)); }
+function saveLocalFriends() { localStorage.setItem('cookingAppFriends', JSON.stringify(friends)); }
+function saveLocalHistory() { localStorage.setItem('cookingAppHistory', JSON.stringify(chatHistory)); }
+
+function escapeHTML(str) {
+  return str.replace(/[&<>'"]/g, tag => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[tag]));
+}
+
+// 名前とバッジの生成
+function renderNameHTML(profile) {
+  let isGold = profile.role === 'admin' && profile.badgeVisible;
+  let html = `<span style="${isGold ? 'color: var(--admin-gold);' : ''}">${escapeHTML(profile.name)}</span>`;
+  
+  if (profile.badgeVisible) {
+    if (profile.role === 'admin') html += `<span class="badge badge-admin" title="管理者">✔</span>`;
+    else if (profile.role === 'verified') html += `<span class="badge badge-verified" title="認証ユーザー">✔</span>`;
+  }
+  return html;
+}
 
 // ==========================================
-// UI UPDATES
+// UI更新
 // ==========================================
 function updateMyUI() {
-  document.getElementById('my-name').innerText = userProfile.name;
-  document.getElementById('my-pin').innerText = 'PIN: ' + sessionPin;
-  document.getElementById('my-avatar').src = userProfile.avatar || '';
+  document.getElementById('my-name-display').innerHTML = renderNameHTML(userProfile);
+  document.getElementById('my-pin').innerText = sessionPin;
+  document.getElementById('my-avatar').src = userProfile.avatar;
 }
 
 function renderFriends() {
@@ -258,29 +316,47 @@ function renderFriends() {
     div.className = 'friend-item';
     div.onclick = () => openChat(f.id);
     div.innerHTML = `
-      <div class="avatar">
-        <img src="${f.avatar}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">
+      <div class="avatar-container">
+        <img src="${f.avatar}">
         <div class="status-dot ${isOnline ? 'online' : ''}"></div>
       </div>
-      <span>${f.name}</span>
+      <div>${renderNameHTML(f)}</div>
     `;
     list.appendChild(div);
   });
 }
 
+function goBackToList() {
+  document.getElementById('app').className = 'view-list';
+}
+
 // ==========================================
-// SETTINGS & PROFILE
+// 設定・プロフィール
 // ==========================================
 function openSettings() {
   document.getElementById('settings-name').value = userProfile.name;
   document.getElementById('settings-bio').value = userProfile.bio;
   document.getElementById('settings-id').value = userProfile.id;
+  document.getElementById('settings-avatar-preview').src = userProfile.avatar;
+  
+  const toggleContainer = document.getElementById('badge-toggle-container');
+  if (userProfile.role === 'admin' || userProfile.role === 'verified') {
+    toggleContainer.style.display = 'block';
+    document.getElementById('badge-visible-checkbox').checked = userProfile.badgeVisible;
+  } else {
+    toggleContainer.style.display = 'none';
+  }
+  
   document.getElementById('settings-modal').style.display = 'flex';
 }
 
 function saveSettings() {
-  userProfile.name = document.getElementById('settings-name').value;
+  userProfile.name = document.getElementById('settings-name').value.trim() || userProfile.name;
   userProfile.bio = document.getElementById('settings-bio').value;
+  
+  if (userProfile.role === 'admin' || userProfile.role === 'verified') {
+    userProfile.badgeVisible = document.getElementById('badge-visible-checkbox').checked;
+  }
   
   const fileInput = document.getElementById('settings-avatar');
   if (fileInput.files && fileInput.files[0]) {
@@ -298,52 +374,96 @@ function saveSettings() {
 function finalizeSettingsSave() {
   saveLocalUser();
   updateMyUI();
+  broadcastProfile();
   closeModal('settings-modal');
+  showToast('設定を保存しました');
 }
 
 function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
+function broadcastProfile() {
+  bc.postMessage({ type: 'PROFILE_UPDATE', profile: userProfile });
+}
+
 // ==========================================
-// VIEW PROFILE & FRIEND REQUEST
+// 管理者機能・他人のプロフィール表示
 // ==========================================
+function makeAdmin() {
+  const pwd = prompt('管理者パスワードを入力してください:');
+  if (pwd === '9999999999') {
+    userProfile.role = 'admin';
+    userProfile.badgeVisible = true;
+    saveLocalUser();
+    updateMyUI();
+    broadcastProfile();
+    closeModal('settings-modal');
+    showToast('管理者アカウントになりました');
+  } else if (pwd !== null) {
+    alert('パスワードが間違っています');
+  }
+}
+
 let currentViewProfileId = null;
 function viewProfile(profile) {
   currentViewProfileId = profile.id;
   document.getElementById('profile-avatar').src = profile.avatar;
-  document.getElementById('profile-name').innerText = profile.name;
+  document.getElementById('profile-name').innerHTML = renderNameHTML(profile);
   document.getElementById('profile-id').innerText = profile.id;
-  document.getElementById('profile-bio').innerText = profile.bio || 'No bio provided.';
+  document.getElementById('profile-bio').innerText = profile.bio || '自己紹介はありません。';
   
   const btn = document.getElementById('add-friend-btn');
-  if (friends.some(f => f.id === profile.id)) {
-    btn.style.display = 'none'; // Already friends
-  } else {
-    btn.style.display = 'inline-block';
+  btn.style.display = friends.some(f => f.id === profile.id) ? 'none' : 'block';
+  
+  const adminActions = document.getElementById('profile-admin-actions');
+  adminActions.innerHTML = '';
+  if (userProfile.role === 'admin' && profile.id !== userProfile.id) {
+    const btnAdmin = document.createElement('button');
+    btnAdmin.className = 'action-btn';
+    btnAdmin.style.background = profile.role === 'verified' ? 'var(--danger)' : 'var(--verified-blue)';
+    btnAdmin.innerText = profile.role === 'verified' ? '認証を取り消す' : '認証アカウントにする';
+    btnAdmin.onclick = () => toggleVerifyUser(profile.id, profile.role !== 'verified');
+    adminActions.appendChild(btnAdmin);
   }
+  
   document.getElementById('profile-modal').style.display = 'flex';
+}
+
+function toggleVerifyUser(targetId, verify) {
+  bc.postMessage({ type: 'VERIFY_REQ', targetId: targetId, verify: verify });
+  showToast('認証状態の変更リクエストを送信しました');
+  closeModal('profile-modal');
 }
 
 function sendFriendRequest() {
   bc.postMessage({ type: 'FRIEND_REQ', targetId: currentViewProfileId, fromProfile: userProfile });
-  showToast('Friend request sent!');
+  showToast('フレンド申請を送信しました');
   closeModal('profile-modal');
 }
 
 // ==========================================
-// CHAT & NETWORK SIMULATION
+// チャット処理
 // ==========================================
 function requestPinConnection() {
   const targetPin = document.getElementById('target-pin').value;
-  if (targetPin.length !== 5) return alert('Enter a 5-digit PIN');
+  if (targetPin.length !== 5) return alert('5桁のPINを入力してください');
   bc.postMessage({ type: 'PIN_REQ', targetPin: targetPin, fromProfile: userProfile });
-  showToast('Connection request sent...');
+  showToast('接続要求を送信しました...');
+  document.getElementById('target-pin').value = '';
 }
 
 function openChat(friendId) {
   activeChatId = friendId;
   const friend = friends.find(f => f.id === friendId) || tempProfiles[friendId];
-  document.getElementById('chat-header').innerHTML = `<img src="${friend.avatar}" class="avatar" style="width:24px;height:24px;margin-bottom:0;" onclick='viewProfile(${JSON.stringify(friend)})'> ${friend.name}`;
+  
+  const headerContent = document.getElementById('chat-header-content');
+  headerContent.innerHTML = `
+    <div class="header-user-info" onclick='viewProfile(${JSON.stringify(friend)})'>
+      <img src="${friend.avatar}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;">
+      ${renderNameHTML(friend)}
+    </div>
+  `;
   document.getElementById('chat-input-container').style.display = 'block';
+  document.getElementById('app').className = 'view-chat';
   renderChat();
 }
 
@@ -351,12 +471,39 @@ function handleChatInput(e) {
   if (e.key === 'Enter' && e.target.value.trim() !== '') {
     const text = e.target.value.trim();
     if (!chatHistory[activeChatId]) chatHistory[activeChatId] = [];
-    chatHistory[activeChatId].push({ fromMe: true, text });
+    
+    const msg = {
+      id: 'msg_' + Date.now() + '_' + Math.floor(Math.random()*1000),
+      text: text,
+      fromMe: true,
+      deleted: false,
+      silent: false
+    };
+    
+    chatHistory[activeChatId].push(msg);
     saveLocalHistory();
     renderChat();
     
-    bc.postMessage({ type: 'MSG', targetId: activeChatId, fromId: userProfile.id, text });
+    bc.postMessage({ type: 'MSG', targetId: activeChatId, fromId: userProfile.id, msg: msg });
     e.target.value = '';
+  }
+}
+
+function deleteMessage(msgId) {
+  const isSilent = (userProfile.role === 'admin');
+  const msg = chatHistory[activeChatId].find(m => m.id === msgId);
+  if (msg) {
+    msg.deleted = true;
+    msg.silent = isSilent;
+    saveLocalHistory();
+    renderChat();
+    bc.postMessage({
+      type: 'MSG_DELETE',
+      targetId: activeChatId,
+      fromId: userProfile.id,
+      msgId: msgId,
+      silent: isSilent
+    });
   }
 }
 
@@ -366,15 +513,43 @@ function renderChat() {
   if (!activeChatId || !chatHistory[activeChatId]) return;
   
   const friend = friends.find(f => f.id === activeChatId) || tempProfiles[activeChatId];
+  
   chatHistory[activeChatId].forEach(msg => {
+    // 削除されたメッセージの表示ロジック
+    let msgContentHtml = '';
+    if (msg.deleted) {
+      if (msg.silent) {
+        if (userProfile.role === 'admin') {
+          msgContentHtml = `<div class="msg-text deleted-silent">[取り消し済み] ${escapeHTML(msg.text)}</div>`;
+        } else {
+          return; // 管理者以外には完全に非表示
+        }
+      } else {
+        msgContentHtml = `<div class="msg-text deleted-notify">メッセージは取り消されました</div>`;
+      }
+    } else {
+      msgContentHtml = `<div class="msg-text">${escapeHTML(msg.text).replace(/\n/g, '<br>')}</div>`;
+    }
+
+    // 削除ボタンの表示ロジック (自分が送信したもの && (管理者 or 認証) && 未削除)
+    let deleteBtnHtml = '';
+    if (msg.fromMe && !msg.deleted && (userProfile.role === 'admin' || userProfile.role === 'verified')) {
+      deleteBtnHtml = `<button class="btn-delete" onclick="deleteMessage('${msg.id}')">取り消し</button>`;
+    }
+
     const div = document.createElement('div');
     div.className = 'message';
     div.innerHTML = `
-      <img class="avatar" src="${msg.fromMe ? userProfile.avatar : friend.avatar}">
-      <div class="msg-content">
-        <div class="msg-author" style="color:${msg.fromMe ? 'var(--brand)' : 'white'}">${msg.fromMe ? userProfile.name : friend.name}</div>
-        <div class="msg-text">${msg.text}</div>
+      <div class="avatar-container" style="width:40px;height:40px;margin-right:0;">
+        <img src="${msg.fromMe ? userProfile.avatar : friend.avatar}">
       </div>
+      <div class="msg-content">
+        <div class="msg-author-line">
+          ${renderNameHTML(msg.fromMe ? userProfile : friend)}
+        </div>
+        ${msgContentHtml}
+      </div>
+      ${deleteBtnHtml}
     `;
     container.appendChild(div);
   });
@@ -382,12 +557,11 @@ function renderChat() {
 }
 
 // ==========================================
-// NETWORK HANDLER (BroadcastChannel)
+// ネットワーク通信 (BroadcastChannel)
 // ==========================================
 bc.onmessage = (event) => {
   const data = event.data;
   
-  // Track online status via PING
   if (data.type === 'PING') {
     if (friends.some(f => f.id === data.id)) {
       onlineFriends.add(data.id);
@@ -396,45 +570,81 @@ bc.onmessage = (event) => {
     }
   }
   
-  // Receive PIN Request
+  if (data.type === 'PROFILE_UPDATE') {
+    const idx = friends.findIndex(f => f.id === data.profile.id);
+    if (idx >= 0) {
+      friends[idx] = data.profile;
+      saveLocalFriends();
+      renderFriends();
+      if (activeChatId === data.profile.id) renderChat();
+    }
+    if (tempProfiles[data.profile.id]) {
+      tempProfiles[data.profile.id] = data.profile;
+      if (activeChatId === data.profile.id) renderChat();
+    }
+    // 表示中のプロフィールの更新
+    if (currentViewProfileId === data.profile.id && document.getElementById('profile-modal').style.display === 'flex') {
+      viewProfile(data.profile);
+    }
+  }
+  
   if (data.type === 'PIN_REQ' && data.targetPin === sessionPin) {
-    if (confirm(`${data.fromProfile.name} wants to connect via PIN. Accept?`)) {
+    if (confirm(`${data.fromProfile.name} から接続要求が来ています。受け入れますか？`)) {
       tempProfiles[data.fromProfile.id] = data.fromProfile;
       bc.postMessage({ type: 'PIN_ACCEPT', targetId: data.fromProfile.id, fromProfile: userProfile });
       openChat(data.fromProfile.id);
     }
   }
   
-  // PIN Request Accepted
   if (data.type === 'PIN_ACCEPT' && data.targetId === userProfile.id) {
     tempProfiles[data.fromProfile.id] = data.fromProfile;
-    showToast(`${data.fromProfile.name} accepted your connection!`);
+    showToast(`${data.fromProfile.name} が接続を受け入れました`);
     openChat(data.fromProfile.id);
   }
   
-  // Receive Friend Request
   if (data.type === 'FRIEND_REQ' && data.targetId === userProfile.id) {
-    if (confirm(`Friend request from ${data.fromProfile.name}. Accept?`)) {
+    if (confirm(`${data.fromProfile.name} からフレンド申請が届きました。承認しますか？`)) {
       addFriend(data.fromProfile);
       bc.postMessage({ type: 'FRIEND_ACCEPT', targetId: data.fromProfile.id, fromProfile: userProfile });
     }
   }
   
-  // Friend Request Accepted
   if (data.type === 'FRIEND_ACCEPT' && data.targetId === userProfile.id) {
     addFriend(data.fromProfile);
-    showToast(`${data.fromProfile.name} is now your friend!`);
+    showToast(`${data.fromProfile.name} とフレンドになりました！`);
   }
   
-  // Receive Message
+  if (data.type === 'VERIFY_REQ' && data.targetId === userProfile.id) {
+    userProfile.role = data.verify ? 'verified' : 'user';
+    saveLocalUser();
+    broadcastProfile();
+    updateMyUI();
+    showToast(data.verify ? '管理者から認証アカウントに認定されました！' : '認証アカウントのステータスが解除されました');
+  }
+
   if (data.type === 'MSG' && data.targetId === userProfile.id) {
     if (!chatHistory[data.fromId]) chatHistory[data.fromId] = [];
-    chatHistory[data.fromId].push({ fromMe: false, text: data.text });
+    const receivedMsg = { ...data.msg, fromMe: false };
+    chatHistory[data.fromId].push(receivedMsg);
     saveLocalHistory();
     if (activeChatId === data.fromId) {
       renderChat();
     } else {
-      showToast(`New message from ${tempProfiles[data.fromId]?.name || 'a friend'}`);
+      showToast(`${tempProfiles[data.fromId]?.name || 'フレンド'} から新着メッセージ`);
+    }
+  }
+  
+  if (data.type === 'MSG_DELETE' && data.targetId === userProfile.id) {
+    const friendId = data.fromId;
+    if (chatHistory[friendId]) {
+      const msg = chatHistory[friendId].find(m => m.id === data.msgId);
+      if (msg) {
+        msg.deleted = true;
+        msg.silent = data.silent;
+        saveLocalHistory();
+        if (activeChatId === friendId) renderChat();
+        if (!data.silent) showToast('相手がメッセージを取り消しました');
+      }
     }
   }
 };
@@ -456,7 +666,6 @@ function showToast(msg) {
   setTimeout(() => toast.remove(), 3000);
 }
 
-// Start app
 init();
 </script>
 </body>
